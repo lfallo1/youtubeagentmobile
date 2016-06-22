@@ -63,7 +63,7 @@
                     new SortOption('dislikes', 1, 'thumbsdown', 'Dislikes'),
                     new SortOption('pctLikes', -1, 'star', 'Rating')
                 ];
-                $scope.sortField.value = $scope.sortOptions[0].value;
+                $scope.sortObject = $scope.sortOptions[0];
             };
 
             $scope.reset = function(){
@@ -405,12 +405,11 @@
             };
 
             $scope.sort = function(){
-                var sortObject = $scope.sortOptions.filter(function(d){if(d.value === $scope.sortField.value){return d;}})[0];
                 $scope.searchResults = $scope.searchResults.sort(function(a,b){
-                    if(a[sortObject.value] > b[sortObject.value]){
-                        return sortObject.direction;
-                    } else if(a[sortObject.value] < b[sortObject.value]){
-                        return -sortObject.direction;
+                    if(a[$scope.sortObject.value] > b[$scope.sortObject.value]){
+                        return $scope.sortObject.direction;
+                    } else if(a[$scope.sortObject.value] < b[$scope.sortObject.value]){
+                        return -$scope.sortObject.direction;
                     }
                     return 0;
                 });
@@ -468,6 +467,12 @@
             }).then(function(modal) {
                 $scope.postSearchModal = modal;
             });
+            $ionicModal.fromTemplateUrl('templates/modals/sortModal.html', {
+                scope: $scope,
+                animation: 'slide-in-up'
+            }).then(function(modal) {
+                $scope.sortModal = modal;
+            });
 
             $scope.openPreSearchModal = function() {
                 $scope.activeModal = 'filterPreSearchModal';
@@ -477,20 +482,32 @@
                 $scope.activeModal = 'filterPostSearchModal';
                 $scope.postSearchModal.show();
             };
+            $scope.openSortModal = function() {
+                $scope.activeModal = 'sortModal';
+                $scope.sortModal.show();
+            };
 
             $scope.$on('$destroy', function(){
                 $scope.preSearchModal.remove();
                 $scope.postSearchModal.remove();
             });
 
+            $scope.pick = function(sortObject) {
+                $scope.selectedSort = sortObject.value;
+                $scope.sortModal.hide();
+            };
+
             $scope.$on('modal.hidden', function() {
                 if($scope.activeModal === 'filterPostSearchModal'){
-                    $log.info($scope.postfilter);
+                    $scope.sort();
                 }
                 else if($scope.activeModal === 'filterPreSearchModal'){
                     $log.info($scope.prefilter);
                 }
-
+                else if($scope.activeModal === 'sortModal'){
+                    $scope.sortObject = $scope.sortOptions.filter(function(d){if(d.value === $scope.selectedSort){return d;}})[0];
+                    $scope.sort();
+                }
             });
 
 

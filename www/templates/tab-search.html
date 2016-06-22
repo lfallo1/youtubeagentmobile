@@ -22,9 +22,7 @@
       </button>
     </div>
     <div class="button-bar">
-      <a class="button button-dark icon-left ion-{{option.glyph}}" ng-repeat="option in sortOptions" ng-click="sortOptionChanged(option)">
-        {{option.displayName}}"
-      </a>
+      <a class="button button-dark icon-left ion-ios-cog" ng-click="openSortModal()">Sort by: {{sortObject.displayName}}</a>
     </div>
 
     <ion-list>
