@@ -1,15 +1,30 @@
 <ion-view view-title="Text Search">
   <ion-content class="padding">
-    <h2>YoutubeAgent</h2>
-
     <div class="bar bar-header item-input-inset">
       <label class="item-input-wrapper">
         <i class="icon ion-ios-search placeholder-icon"></i>
         <input type="search" placeholder="Search" ng-model="search.searchParam">
       </label>
-      <button class="button button-light" ng-click="doSearch()">
+      <button ng-show="!fetching" class="button button-balanced" ng-click="doSearch()">
         Search
       </button>
+      <button ng-show="fetching" class="button button-assertive" ng-click="interrupt()">
+        Stop
+      </button>
+    </div>
+
+    <div class="button-bar">
+      <button ng-disabled="fetching" class="button button-full button-positive" ng-click="openPreSearchModal()">
+        <i class="icon-left ion-funnel"></i>Pre-Search Filter
+      </button>
+      <button class="button button-full button-positive" ng-click="openPostSearchModal()">
+        <i class="icon-left ion-funnel"></i>Post-Search Filter
+      </button>
+    </div>
+    <div class="button-bar">
+      <a class="button button-dark icon-left ion-{{option.glyph}}" ng-repeat="option in sortOptions" ng-click="sortOptionChanged(option)">
+        {{option.displayName}}"
+      </a>
     </div>
 
     <ion-list>

@@ -3,8 +3,8 @@
  */
 (function(){
     angular.module('youtubeSearchApp').controller('SearchCtrl', [
-        '$rootScope', '$scope', '$http', '$q', '$log', '$timeout', '$location', 'TimeService', '$window','$sce', 'YoutubeService',
-        function($rootScope, $scope, $http, $q, $log, $timeout, $location, TimeService, $window,  $sce, YoutubeService){
+        '$rootScope', '$scope', '$http', '$q', '$log', '$timeout', '$location', 'TimeService', '$window','$sce', 'YoutubeService', '$ionicModal',
+        function($rootScope, $scope, $http, $q, $log, $timeout, $location, TimeService, $window,  $sce, YoutubeService, $ionicModal){
 
             var youtubeSearchBase = 'https://www.googleapis.com/youtube/v3/search?part=snippet&q=';
             var youtubeVideoBase = 'https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=';
@@ -21,9 +21,6 @@
             var videoDuration= '';
             var videoCategoryId= '';
             var safeSearch= '';
-
-            $scope.videoDurationOptions = ['any','long','medium','short'];
-            $scope.safeSearchOptions = ['moderate', 'none', 'strict'];
 
             /**
              * SortOption object
@@ -46,10 +43,6 @@
             var init = function(){
 
                 $scope.extendedSearch = false;
-                $scope.videoDuration = $scope.videoDurationOptions[0];
-                $scope.safeSearch = $scope.safeSearchOptions[0];
-                $scope.preSearchFiltersVisible = $scope.sortVisible = $scope.filterVisible = true;
-
                 $scope.watchlist = [];
                 $scope.selectedVideos = [];
 
@@ -59,12 +52,15 @@
                 $scope.search = {searchParam : ''};
                 $scope.searchResults = $scope.filteredResults = [];
 
+                $scope.postfilter = {};
+                $scope.prefilter = {};
+
                 //setup sort options (each sort option will be used for a search). different sort options
                 //are used to increate search results
                 $scope.sortOptions = [
-                    new SortOption('viewCount', -1, 'user', 'Views'),
-                    new SortOption('likes', -1, 'thumbs-up', 'Likes'),
-                    new SortOption('dislikes', 1, 'thumbs-down', 'Dislikes'),
+                    new SortOption('viewCount', -1, 'eye', 'Views'),
+                    new SortOption('likes', -1, 'thumbsdown', 'Likes'),
+                    new SortOption('dislikes', 1, 'thumbsdown', 'Dislikes'),
                     new SortOption('pctLikes', -1, 'star', 'Rating')
                 ];
                 $scope.sortField.value = $scope.sortOptions[0].value;
@@ -148,6 +144,9 @@
                     $scope.wasInterrupted = undefined;
                     $scope.fetching = true;
 
+                    videoDuration = $scope.prefilter.duration ? '&videoDuration=' + $scope.prefilter.duration : '';
+                    safeSearch = $scope.prefilter.safesearch ? '&safeSearch=' + $scope.prefilter.safesearch : '';
+
                     //call the wrapper
                     fetchResultsWrapper(0);
                 }
@@ -167,8 +166,8 @@
                     return;
                 }
 
-                var dateLarge = $scope.preSearchMaxDate ? "&publishedBefore=" + $scope.preSearchMaxDate.toISOString() : '';
-                var dateSmall = $scope.preSearchMinDate ? "&publishedAfter=" + $scope.preSearchMinDate.toISOString() : '';
+                var dateLarge = $scope.prefilter.maxDate ? "&publishedBefore=" + $scope.prefilter.maxDate.toISOString() : '';
+                var dateSmall = $scope.prefilter.minDate ? "&publishedAfter=" + $scope.prefilter.minDate.toISOString() : '';
 
                 //fetch results, passing the date range (the date ranges can be empty)
                 fetchResults(dateSmall, dateLarge).then(function(){
@@ -336,8 +335,8 @@
 
                         addVideosToList(data);
 
-                        //$scope.sort();
-                        $scope.filteredResults = $scope.searchResults;
+                        $scope.sort();
+                        //$scope.filteredResults = $scope.searchResults;
 
                         fetchResults(dateSmall, dateLarge, deferred);
                     }, function (err) {
@@ -415,20 +414,20 @@
                     }
                     return 0;
                 });
-                //$scope.filter();
+                $scope.filter();
             };
 
             $scope.filter = function(){
-                if(!$scope.minViews && (!$scope.minDislikes && $scope.minDislikes !== 0) && !$scope.minDate && !$scope.shorterThanFilter && !$scope.longerThanFilter && !$scope.minRating){
+                if(!$scope.prefilter.minViews && (!$scope.prefilter.minDislikes && $scope.prefilter.minDislikes !== 0) && !$scope.prefilter.minDate && !$scope.prefilter.shorterThan && !$scope.prefilter.longerThan && !$scope.prefilter.minRating){
                     $scope.filteredResults = $scope.searchResults;
                     return;
                 }
                 $scope.filteredResults = $scope.searchResults.filter(function(d){
-                    if(((!$scope.minDislikes && $scope.minDislikes !== 0) || d.dislikes <= $scope.minDislikes) &&
-                        (!$scope.minViews || d.viewCount >= $scope.minViews) &&
-                        (!$scope.minRating || d.pctLikes >= $scope.minRating) &&
-                        (!$scope.maxDate || d.created >= $scope.maxDate) &&
-                        (!$scope.minDate || d.created >= $scope.minDate) && durationFilter(d)){
+                    if(((!$scope.prefilter.minDislikes && $scope.prefilter.minDislikes !== 0) || d.dislikes <= $scope.prefilter.minDislikes) &&
+                        (!$scope.prefilter.minViews || d.viewCount >= $scope.prefilter.minViews) &&
+                        (!$scope.prefilter.minRating || d.pctLikes >= $scope.prefilter.minRating) &&
+                        (!$scope.prefilter.maxDate || d.created >= $scope.prefilter.maxDate) &&
+                        (!$scope.prefilter.minDate || d.created >= $scope.prefilter.minDate) && durationFilter(d)){
                         return d;
                     }
                 });
@@ -442,33 +441,58 @@
                     return true;
                 }
 
-                if($scope.longerThanFilter >= $scope.shorterThanFilter || $scope.shorterThanFilter < 0){
-                    $scope.shorterThanFilter = '';
+                if($scope.longerThan >= $scope.shorterThan || $scope.shorterThan < 0){
+                    $scope.shorterThan = '';
                 }
 
-                if($scope.longerThanFilter < 0){
-                    $scope.longerThanFilter = 0;
+                if($scope.longerThan < 0){
+                    $scope.longerThan = 0;
                 }
 
-                return (isNaN($scope.longerThanFilter) || video.durationMinutes >= $scope.longerThanFilter) &&
-                    (isNaN($scope.shorterThanFilter) || !$scope.shorterThanFilter || video.durationMinutes <= $scope.shorterThanFilter)
+                return (isNaN($scope.longerThan) || video.durationMinutes >= $scope.longerThan) &&
+                    (isNaN($scope.shorterThan) || !$scope.shorterThan || video.durationMinutes <= $scope.shorterThan)
             };
 
-            $scope.setPreSearchFiltersVisible = function(val){
-                $scope.preSearchFiltersVisible = val;
+            /**
+             * MODALS
+             */
+            $ionicModal.fromTemplateUrl('templates/modals/filterPreSearchModal.html', {
+                scope: $scope,
+                animation: 'slide-in-up'
+            }).then(function(modal) {
+                $scope.preSearchModal = modal;
+            });
+            $ionicModal.fromTemplateUrl('templates/modals/filterPostSearchModal.html', {
+                scope: $scope,
+                animation: 'slide-in-up'
+            }).then(function(modal) {
+                $scope.postSearchModal = modal;
+            });
+
+            $scope.openPreSearchModal = function() {
+                $scope.activeModal = 'filterPreSearchModal';
+                $scope.preSearchModal.show();
+            };
+            $scope.openPostSearchModal = function() {
+                $scope.activeModal = 'filterPostSearchModal';
+                $scope.postSearchModal.show();
             };
 
-            $scope.setFilterVisible = function(val){
-                $scope.filterVisible = val;
-            };
+            $scope.$on('$destroy', function(){
+                $scope.preSearchModal.remove();
+                $scope.postSearchModal.remove();
+            });
 
-            $scope.setSortVisible = function(val){
-                $scope.sortVisible = val;
-            };
+            $scope.$on('modal.hidden', function() {
+                if($scope.activeModal === 'filterPostSearchModal'){
+                    $log.info($scope.postfilter);
+                }
+                else if($scope.activeModal === 'filterPreSearchModal'){
+                    $log.info($scope.prefilter);
+                }
 
-            $scope.disableDownload = function(video){
-              video.downloadDisabled = true;
-            };
+            });
+
 
             init();
 
