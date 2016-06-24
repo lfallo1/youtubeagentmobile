@@ -1,1 +1,28 @@
 /* Empty. Add your own CSS if you like */
+
+#search-box, #search-box input, #search-start-button, #search-stop-button{
+  font-size: 24px;
+}
+
+#search-start-button, #search-stop-button{
+  width: 20%;
+}
+
+#search-start-button .icon:before, #search-stop-button .icon:before{
+  color: white;
+}
+
+.section-header{
+  background: black;
+  color: white;
+  padding: 8px;
+  font-weight: bold;
+  text-align: center;
+  font-size: 16px;
+}
+
+.item-divider-ios{
+  text-align: center;
+  font-weight: bold;
+  font-size: 20px;
+}

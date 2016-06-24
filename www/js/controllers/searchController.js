@@ -385,6 +385,12 @@
                             duration = TimeService.isoToDuration(datastats.contentDetails.duration);
                         }
 
+                      var description = '';
+                      if(datastats.snippet.localized.description){
+                        description = datastats.snippet.localized.description.substring(0,100);
+                      }
+
+
                         //add object to search results
                         $scope.searchResults.push({
                             "title": title,
@@ -398,7 +404,8 @@
                             "dislikes": Number(dislikes) || 0,
                             "thumbnail": datastats.snippet.thumbnails.medium,
                             "duration": duration.formatted || null,
-                            "durationMinutes": duration.approxMinutes || null
+                            "durationMinutes": duration.approxMinutes || null,
+                            'description' : description
                         });
                     }
                 }
@@ -455,17 +462,11 @@
             /**
              * MODALS
              */
-            $ionicModal.fromTemplateUrl('templates/modals/filterPreSearchModal.html', {
+            $ionicModal.fromTemplateUrl('templates/modals/filterModal.html', {
                 scope: $scope,
                 animation: 'slide-in-up'
             }).then(function(modal) {
                 $scope.preSearchModal = modal;
-            });
-            $ionicModal.fromTemplateUrl('templates/modals/filterPostSearchModal.html', {
-                scope: $scope,
-                animation: 'slide-in-up'
-            }).then(function(modal) {
-                $scope.postSearchModal = modal;
             });
             $ionicModal.fromTemplateUrl('templates/modals/sortModal.html', {
                 scope: $scope,
@@ -474,14 +475,11 @@
                 $scope.sortModal = modal;
             });
 
-            $scope.openPreSearchModal = function() {
-                $scope.activeModal = 'filterPreSearchModal';
+            $scope.openFilterModal = function() {
+                $scope.activeModal = 'filterModal';
                 $scope.preSearchModal.show();
             };
-            $scope.openPostSearchModal = function() {
-                $scope.activeModal = 'filterPostSearchModal';
-                $scope.postSearchModal.show();
-            };
+
             $scope.openSortModal = function() {
                 $scope.activeModal = 'sortModal';
                 $scope.sortModal.show();
@@ -498,11 +496,10 @@
             };
 
             $scope.$on('modal.hidden', function() {
-                if($scope.activeModal === 'filterPostSearchModal'){
-                    $scope.sort();
-                }
-                else if($scope.activeModal === 'filterPreSearchModal'){
-                    $log.info($scope.prefilter);
+                if($scope.activeModal === 'filterModal'){
+                    if($scope.searchResults.length > 0){
+                      $scope.sort();
+                    }
                 }
                 else if($scope.activeModal === 'sortModal'){
                     $scope.sortObject = $scope.sortOptions.filter(function(d){if(d.value === $scope.selectedSort){return d;}})[0];

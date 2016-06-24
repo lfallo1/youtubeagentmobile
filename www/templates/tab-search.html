@@ -1,28 +1,25 @@
 <ion-view view-title="Text Search">
   <ion-content class="padding">
-    <div class="bar bar-header item-input-inset">
-      <label class="item-input-wrapper">
+    <div id="search-bar" class="bar bar-header item-input-inset">
+      <label id="search-box" class="item-input-wrapper">
         <i class="icon ion-ios-search placeholder-icon"></i>
         <input type="search" placeholder="Search" ng-model="search.searchParam">
       </label>
-      <button ng-show="!fetching" class="button button-balanced" ng-click="doSearch()">
-        Search
+      <button id="search-start-button" ng-show="!fetching" class="button button-balanced" ng-click="doSearch()">
+        <i class="icon ion-ios-play placeholder-icon"></i>
       </button>
-      <button ng-show="fetching" class="button button-assertive" ng-click="interrupt()">
-        Stop
+      <button id="search-stop-button" ng-show="fetching" class="button button-assertive" ng-click="interrupt()">
+        <i class="icon ion-stop placeholder-icon"></i>
       </button>
     </div>
 
-    <div class="button-bar">
-      <button ng-disabled="fetching" class="button button-full button-positive" ng-click="openPreSearchModal()">
-        <i class="icon-left ion-funnel"></i>Pre-Search Filter
+    <div id="sort-filter-bar" class="button-bar">
+      <button class="button button-full button-dark" ng-click="openFilterModal()">
+        <i class="icon-left ion-funnel"></i>
       </button>
-      <button class="button button-full button-positive" ng-click="openPostSearchModal()">
-        <i class="icon-left ion-funnel"></i>Post-Search Filter
+      <button class="button button-full button-dark" ng-click="openSortModal()">
+        <i class="icon-left ion-arrow-swap"></i>
       </button>
-    </div>
-    <div class="button-bar">
-      <a class="button button-dark icon-left ion-ios-cog" ng-click="openSortModal()">Sort by: {{sortObject.displayName}}</a>
     </div>
 
     <ion-list>
@@ -33,17 +30,17 @@
           <div class="item item-avatar">
             <h2>{{video.title}}</h2>
             <p>{{video.created | date:'MM-dd-yyyy'}}</p>
+            <p><a href="#" class="subdued">{{video.duration}}</a></p>
           </div>
 
           <div class="item item-body">
             <img class="full-image" src="{{video.thumbnail.url}}">
             <p>
-              Maybe the video description can go here
+              {{video.description + '...'}}
             </p>
             <p>
               <a href="#" class="subdued">{{video.likes + ' Like'}}{{video.likes > 1 ? 's' : ''}}</a>
               <a href="#" class="subdued">{{video.dislikes + ' Dislike'}}{{video.likes > 1 ? 's' : ''}}</a>
-              <a href="" class="dubdued">{{video.duration}}</a>
             </p>
           </div>
 
